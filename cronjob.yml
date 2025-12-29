@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: minute-backup
+  namespace: nginx
+
+spec:
+  # Run every 2 minutes
+  schedule: "* * * * *"
+
+  # Prevent overlapping runs
+  concurrencyPolicy: Forbid
+
+  # Cleanup old Jobs
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+
+  jobTemplate:
+    spec:
+      # Auto-delete Job & Pod after completion
+      ttlSecondsAfterFinished: 60
+
+      backoffLimit: 3
+
+      template:
+        metadata:
+          labels:
+            app: minute-backup
+
+        spec:
+          restartPolicy: OnFailure
+
+          containers:
+          - name: backup-container
+            image: busybox:latest
+            command:
+              - sh
+              - -c
+              - |
+                echo "backup started"
+                date
+                echo "backup-completed"
+
